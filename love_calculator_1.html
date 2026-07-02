@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Written in the Stars — Love Calculator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Inter:wght@400;500;600&display=swap');
+
+:root{
+  --void: #120a24;
+  --void-deep: #0a0617;
+  --nebula: #ff6fa5;
+  --nebula-soft: rgba(255,111,165,0.35);
+  --gold: #f4c968;
+  --lavender: #b8a9db;
+  --starlight: #f3eefc;
+  --line: rgba(184,169,219,0.22);
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(255,111,165,0.10), transparent 45%),
+    radial-gradient(ellipse at 80% 85%, rgba(244,201,104,0.08), transparent 40%),
+    linear-gradient(180deg, var(--void-deep), var(--void) 60%, var(--void-deep));
+  color: var(--starlight);
+  font-family: 'Inter', sans-serif;
+  overflow-x:hidden;
+  position:relative;
+}
+
+#stars{ position:fixed; inset:0; z-index:0; pointer-events:none; }
+.star{
+  position:absolute; background:var(--starlight); border-radius:50%;
+  opacity:0.6; animation: twinkle 4s ease-in-out infinite;
+}
+@keyframes twinkle{
+  0%,100%{ opacity:0.15; }
+  50%{ opacity:0.9; }
+}
+
+.wrap{ position:relative; z-index:1; max-width:920px; margin:0 auto; padding:64px 24px 100px; }
+
+.eyebrow{
+  text-align:center; letter-spacing:0.28em; text-transform:uppercase;
+  font-size:12px; color:var(--lavender); margin-bottom:14px; font-weight:600;
+}
+
+h1{
+  text-align:center; font-family:'Cormorant Garamond', serif; font-weight:600;
+  font-size:clamp(40px, 7vw, 68px); margin:0 0 8px; line-height:1.05;
+  background:linear-gradient(135deg, var(--starlight) 30%, var(--nebula) 70%, var(--gold));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+
+.sub{
+  text-align:center; color:var(--lavender); font-size:15px; max-width:480px;
+  margin:0 auto 56px; line-height:1.6;
+}
+
+.panels{ display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:32px; }
+@media (max-width:640px){ .panels{ grid-template-columns:1fr; } }
+
+.card{
+  background:linear-gradient(180deg, rgba(184,169,219,0.06), rgba(184,169,219,0.02));
+  border:1px solid var(--line); border-radius:18px; padding:28px 24px;
+  position:relative; transition:border-color .3s ease, transform .3s ease;
+}
+.card:hover{ border-color:rgba(255,111,165,0.4); }
+
+.card .glyph{
+  position:absolute; top:20px; right:22px; font-size:28px; color:var(--gold);
+  opacity:0; transform:scale(0.6); transition:all .4s ease;
+}
+.card .glyph.show{ opacity:1; transform:scale(1); }
+
+.card label{
+  display:block; font-size:11px; letter-spacing:0.14em; text-transform:uppercase;
+  color:var(--lavender); margin-bottom:8px; font-weight:600;
+}
+.card input{
+  width:100%; background:rgba(10,6,23,0.55); border:1px solid var(--line);
+  border-radius:10px; padding:12px 14px; color:var(--starlight); font-size:15px;
+  font-family:'Inter',sans-serif; margin-bottom:16px; outline:none;
+  transition:border-color .2s ease;
+}
+.card input:last-of-type{ margin-bottom:0; }
+.card input:focus{ border-color:var(--nebula); }
+.card input::placeholder{ color:rgba(243,238,252,0.3); }
+.card .sign-name{
+  font-family:'Cormorant Garamond', serif; font-style:italic; font-size:14px;
+  color:var(--gold); min-height:18px; margin-top:10px;
+}
+
+.reveal-btn{
+  display:block; margin:8px auto 0; padding:15px 42px; border-radius:999px;
+  border:1px solid rgba(255,111,165,0.5);
+  background:linear-gradient(135deg, rgba(255,111,165,0.18), rgba(244,201,104,0.12));
+  color:var(--starlight); font-family:'Cormorant Garamond', serif; font-style:italic;
+  font-size:19px; letter-spacing:0.02em; cursor:pointer;
+  transition: all .3s ease;
+}
+.reveal-btn:hover{ background:linear-gradient(135deg, rgba(255,111,165,0.32), rgba(244,201,104,0.2)); transform:translateY(-1px); }
+.reveal-btn:disabled{ opacity:0.35; cursor:not-allowed; }
+
+#result{
+  margin-top:56px; opacity:0; transform:translateY(14px);
+  transition: opacity .6s ease, transform .6s ease;
+}
+#result.show{ opacity:1; transform:translateY(0); }
+
+.constellation-wrap{ display:flex; justify-content:center; margin-bottom:8px; }
+
+.score-circle-wrap{ display:flex; justify-content:center; margin-top:-10px; }
+.score-label{ text-align:center; margin-top:10px; }
+.score-num{
+  font-family:'Cormorant Garamond', serif; font-size:56px; font-weight:600;
+  background:linear-gradient(135deg, var(--gold), var(--nebula));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.score-msg{ font-size:15px; color:var(--starlight); margin-top:6px; max-width:420px; margin-left:auto; margin-right:auto; }
+
+.breakdown{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:40px;
+}
+@media (max-width:640px){ .breakdown{ grid-template-columns:1fr; } }
+.stat{
+  border:1px solid var(--line); border-radius:14px; padding:18px; text-align:center;
+  background:rgba(184,169,219,0.04);
+}
+.stat .stat-label{
+  font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--lavender);
+  margin-bottom:8px; font-weight:600;
+}
+.stat .stat-val{ font-family:'Cormorant Garamond', serif; font-size:26px; color:var(--gold); }
+
+.names-row{
+  display:flex; justify-content:space-between; font-family:'Cormorant Garamond', serif;
+  font-style:italic; font-size:17px; color:var(--lavender); margin-top:36px; max-width:480px;
+  margin-left:auto; margin-right:auto;
+}
+
+footer{ text-align:center; margin-top:70px; font-size:12px; color:rgba(184,169,219,0.5); }
+</style>
+</head>
+<body>
+
+<div id="stars"></div>
+
+<div class="wrap">
+  <div class="eyebrow">Cosmic Compatibility</div>
+  <h1>Written in the Stars</h1>
+  <p class="sub">Enter two names and birthdates. The stars — and a little arithmetic — will do the rest.</p>
+
+  <div class="panels">
+    <div class="card">
+      <span class="glyph" id="glyph1">✦</span>
+      <label for="name1">First name</label>
+      <input type="text" id="name1" placeholder="e.g. Alice">
+      <label for="date1">Birthdate</label>
+      <input type="date" id="date1">
+      <div class="sign-name" id="signName1"></div>
+    </div>
+    <div class="card">
+      <span class="glyph" id="glyph2">✦</span>
+      <label for="name2">Second name</label>
+      <input type="text" id="name2" placeholder="e.g. Bob">
+      <label for="date2">Birthdate</label>
+      <input type="date" id="date2">
+      <div class="sign-name" id="signName2"></div>
+    </div>
+  </div>
+
+  <button class="reveal-btn" id="revealBtn">✧ Reveal Your Fate ✧</button>
+
+  <div id="result">
+    <div class="constellation-wrap">
+      <svg id="constellationSvg" width="360" height="180" viewBox="0 0 360 180"></svg>
+    </div>
+    <div class="score-label">
+      <div class="score-num" id="scoreNum">0%</div>
+      <div class="score-msg" id="scoreMsg"></div>
+    </div>
+
+    <div class="names-row">
+      <span id="rowName1"></span>
+      <span id="rowName2"></span>
+    </div>
+
+    <div class="breakdown">
+      <div class="stat">
+        <div class="stat-label">Zodiac Match</div>
+        <div class="stat-val" id="statZodiac">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Name Match</div>
+        <div class="stat-val" id="statName">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Age Harmony</div>
+        <div class="stat-val" id="statAge">—</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Written in the Stars · a little astrology, a little arithmetic</footer>
+</div>
+
+<script>
+// ---------- Starfield ----------
+const starsContainer = document.getElementById('stars');
+for(let i=0;i<120;i++){
+  const s = document.createElement('div');
+  s.className = 'star';
+  const size = Math.random()*2 + 0.6;
+  s.style.width = size+'px';
+  s.style.height = size+'px';
+  s.style.left = Math.random()*100+'%';
+  s.style.top = Math.random()*100+'%';
+  s.style.animationDelay = (Math.random()*4)+'s';
+  s.style.animationDuration = (3+Math.random()*3)+'s';
+  starsContainer.appendChild(s);
+}
+
+// ---------- Zodiac logic (ported from the Python version) ----------
+const ZODIAC = [
+  ["Capricorn", [1,1], [1,19], "♑"],
+  ["Aquarius", [1,20], [2,18], "♒"],
+  ["Pisces", [2,19], [3,20], "♓"],
+  ["Aries", [3,21], [4,19], "♈"],
+  ["Taurus", [4,20], [5,20], "♉"],
+  ["Gemini", [5,21], [6,20], "♊"],
+  ["Cancer", [6,21], [7,22], "♋"],
+  ["Leo", [7,23], [8,22], "♌"],
+  ["Virgo", [8,23], [9,22], "♍"],
+  ["Libra", [9,23], [10,22], "♎"],
+  ["Scorpio", [10,23], [11,21], "♏"],
+  ["Sagittarius", [11,22], [12,21], "♐"],
+  ["Capricorn", [12,22], [12,31], "♑"],
+];
+
+function getZodiac(day, month){
+  for(const [sign, start, end, glyph] of ZODIAC){
+    const [sm, sd] = start, [em, ed] = end;
+    if((month===sm && day>=sd) || (month===em && day<=ed)){
+      return {sign, glyph};
+    }
+  }
+  return {sign:"Unknown", glyph:"✦"};
+}
+
+const ELEMENTS = {
+  Aries:"Fire", Leo:"Fire", Sagittarius:"Fire",
+  Taurus:"Earth", Virgo:"Earth", Capricorn:"Earth",
+  Gemini:"Air", Libra:"Air", Aquarius:"Air",
+  Cancer:"Water", Scorpio:"Water", Pisces:"Water",
+};
+
+const ELEMENT_COMPAT = {
+  "Fire,Fire":85, "Fire,Earth":55, "Fire,Air":90, "Fire,Water":50,
+  "Earth,Earth":80, "Earth,Air":50, "Earth,Water":90,
+  "Air,Air":75, "Air,Water":55,
+  "Water,Water":88,
+};
+
+function elementScore(sign1, sign2){
+  const e1 = ELEMENTS[sign1], e2 = ELEMENTS[sign2];
+  return ELEMENT_COMPAT[e1+","+e2] ?? ELEMENT_COMPAT[e2+","+e1] ?? 60;
+}
+
+function nameScore(n1, n2){
+  let a = n1.toLowerCase().replace(/\s/g,'').split('');
+  let b = n2.toLowerCase().replace(/\s/g,'').split('');
+  const aCopy = [...a];
+  for(const letter of aCopy){
+    const idx = b.indexOf(letter);
+    if(idx !== -1){
+      a.splice(a.indexOf(letter),1);
+      b.splice(idx,1);
+    }
+  }
+  const remaining = a.length + b.length;
+  const total = n1.replace(/\s/g,'').length + n2.replace(/\s/g,'').length;
+  if(total===0) return 50;
+  let score = 100 - Math.round((remaining/total)*100);
+  return Math.max(10, Math.min(100, score));
+}
+
+function calcAge(dateObj){
+  const today = new Date();
+  let age = today.getFullYear() - dateObj.getFullYear();
+  const hasHadBirthday = (today.getMonth() > dateObj.getMonth()) ||
+    (today.getMonth() === dateObj.getMonth() && today.getDate() >= dateObj.getDate());
+  if(!hasHadBirthday) age--;
+  return age;
+}
+
+function ageFactor(a1, a2){
+  const diff = Math.abs(a1-a2);
+  if(diff<=2) return 10;
+  if(diff<=5) return 5;
+  if(diff<=10) return 0;
+  return -10;
+}
+
+function loveMessage(score){
+  if(score>=90) return "Soulmates — this one's written in the stars.";
+  if(score>=75) return "A beautiful match, with strong potential for lasting love.";
+  if(score>=60) return "Good compatibility — with effort, this can really work.";
+  if(score>=40) return "It's complicated. You'll need to understand each other's rhythms.";
+  return "A tough match — but the stars have been wrong before.";
+}
+
+// ---------- UI wiring ----------
+const name1El = document.getElementById('name1');
+const name2El = document.getElementById('name2');
+const date1El = document.getElementById('date1');
+const date2El = document.getElementById('date2');
+const glyph1El = document.getElementById('glyph1');
+const glyph2El = document.getElementById('glyph2');
+const signName1El = document.getElementById('signName1');
+const signName2El = document.getElementById('signName2');
+const revealBtn = document.getElementById('revealBtn');
+const resultEl = document.getElementById('result');
+
+function parseDate(val){
+  if(!val) return null;
+  const [y,m,d] = val.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+
+function updateGlyph(dateInput, glyphEl, labelEl){
+  const d = parseDate(dateInput.value);
+  if(!d){ glyphEl.classList.remove('show'); labelEl.textContent=''; return null; }
+  const {sign, glyph} = getZodiac(d.getDate(), d.getMonth()+1);
+  glyphEl.textContent = glyph;
+  glyphEl.classList.add('show');
+  labelEl.textContent = sign;
+  return {sign, glyph, date:d};
+}
+
+date1El.addEventListener('input', ()=> updateGlyph(date1El, glyph1El, signName1El));
+date2El.addEventListener('input', ()=> updateGlyph(date2El, glyph2El, signName2El));
+
+function drawConstellation(glyph1, glyph2, pct){
+  const svg = document.getElementById('constellationSvg');
+  svg.innerHTML = '';
+  const ns = "http://www.w3.org/2000/svg";
+  const w=360, h=180;
+  const x1=60, y1=90, x2=300, y2=90;
+
+  // dashed base line
+  const baseLine = document.createElementNS(ns,'line');
+  baseLine.setAttribute('x1',x1); baseLine.setAttribute('y1',y1);
+  baseLine.setAttribute('x2',x2); baseLine.setAttribute('y2',y2);
+  baseLine.setAttribute('stroke','rgba(184,169,219,0.25)');
+  baseLine.setAttribute('stroke-width','1.5');
+  baseLine.setAttribute('stroke-dasharray','4 6');
+  svg.appendChild(baseLine);
+
+  // animated fill line representing score
+  const fillLine = document.createElementNS(ns,'line');
+  fillLine.setAttribute('x1',x1); fillLine.setAttribute('y1',y1);
+  fillLine.setAttribute('x2',x1); fillLine.setAttribute('y2',y1);
+  fillLine.setAttribute('stroke','url(#lineGrad)');
+  fillLine.setAttribute('stroke-width','2.5');
+  fillLine.setAttribute('stroke-linecap','round');
+  svg.appendChild(fillLine);
+
+  const defs = document.createElementNS(ns,'defs');
+  defs.innerHTML = `<linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#f4c968"/>
+    <stop offset="100%" stop-color="#ff6fa5"/>
+  </linearGradient>`;
+  svg.appendChild(defs);
+
+  // small stars along the way
+  for(let i=0;i<6;i++){
+    const t = i/5;
+    const cx = x1 + (x2-x1)*t;
+    const cy = y1 + Math.sin(t*Math.PI)*(-18);
+    const c = document.createElementNS(ns,'circle');
+    c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r','1.4');
+    c.setAttribute('fill','rgba(243,238,252,0.5)');
+    svg.appendChild(c);
+  }
+
+  // glyph circles
+  [[x1,y1,glyph1],[x2,y2,glyph2]].forEach(([cx,cy,g])=>{
+    const circle = document.createElementNS(ns,'circle');
+    circle.setAttribute('cx',cx); circle.setAttribute('cy',cy); circle.setAttribute('r','26');
+    circle.setAttribute('fill','rgba(18,10,36,0.8)');
+    circle.setAttribute('stroke','rgba(244,201,104,0.5)');
+    circle.setAttribute('stroke-width','1');
+    svg.appendChild(circle);
+    const text = document.createElementNS(ns,'text');
+    text.setAttribute('x',cx); text.setAttribute('y',cy+8);
+    text.setAttribute('text-anchor','middle');
+    text.setAttribute('font-size','22');
+    text.setAttribute('fill','#f4c968');
+    text.textContent = g;
+    svg.appendChild(text);
+  });
+
+  // animate fill line to represent pct
+  requestAnimationFrame(()=>{
+    fillLine.style.transition = 'x2 1.1s cubic-bezier(.2,.8,.2,1)';
+    const targetX = x1 + (x2-x1)*(pct/100);
+    fillLine.setAttribute('x2', targetX);
+  });
+}
+
+revealBtn.addEventListener('click', ()=>{
+  const n1 = name1El.value.trim() || 'Person 1';
+  const n2 = name2El.value.trim() || 'Person 2';
+  const z1 = updateGlyph(date1El, glyph1El, signName1El);
+  const z2 = updateGlyph(date2El, glyph2El, signName2El);
+
+  if(!z1 || !z2){
+    alert('Please enter both birthdates to reveal your compatibility.');
+    return;
+  }
+
+  const age1 = calcAge(z1.date);
+  const age2 = calcAge(z2.date);
+  const zScore = elementScore(z1.sign, z2.sign);
+  const nScore = nameScore(n1, n2);
+  const aFactor = ageFactor(age1, age2);
+
+  let finalScore = Math.round(zScore*0.5 + nScore*0.4) + aFactor;
+  finalScore = Math.max(0, Math.min(100, finalScore));
+
+  document.getElementById('scoreNum').textContent = finalScore + '%';
+  document.getElementById('scoreMsg').textContent = loveMessage(finalScore);
+  document.getElementById('statZodiac').textContent = zScore + '/100';
+  document.getElementById('statName').textContent = nScore + '/100';
+  document.getElementById('statAge').textContent = (aFactor>=0?'+':'') + aFactor;
+  document.getElementById('rowName1').textContent = `${n1} · ${z1.sign}`;
+  document.getElementById('rowName2').textContent = `${n2} · ${z2.sign}`;
+
+  drawConstellation(z1.glyph, z2.glyph, finalScore);
+
+  resultEl.classList.add('show');
+  resultEl.scrollIntoView({behavior:'smooth', block:'nearest'});
+});
+</script>
+
+</body>
+</html>
